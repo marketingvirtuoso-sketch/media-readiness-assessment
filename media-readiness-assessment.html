@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Readiness Assessment — Jane Tabachnick & Co.</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f5;
+    --bg3: #f0efeb;
+    --text: #1a1a1a;
+    --text2: #555550;
+    --text3: #999990;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.2);
+    --accent: #3D3580;
+    --accent-light: #EEEDFE;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --bg2: #242424;
+      --bg3: #2e2e2e;
+      --text: #f0f0ee;
+      --text2: #aaaaaa;
+      --text3: #666660;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --accent-light: #26215C;
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg3);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1rem 4rem;
+  }
+  .topnav {
+    width: 100%;
+    max-width: 580px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0;
+    margin-bottom: 0.5rem;
+  }
+  .wordmark { display: flex; flex-direction: column; gap: 1px; }
+  .wordmark-name { font-size: 15px; font-weight: 500; color: var(--accent); letter-spacing: 0.01em; line-height: 1.2; }
+  .wordmark-co { font-size: 10px; font-weight: 400; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; padding-left: 14px; }
+  .wordmark-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: middle; position: relative; top: -1px; }
+  .nav-tagline { font-size: 11px; color: var(--text3); letter-spacing: 0.04em; }
+  .card {
+    background: var(--bg);
+    border-radius: 16px;
+    border: 0.5px solid var(--border);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 580px;
+  }
+  .brand { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 0.5rem; }
+  h1 { font-size: 24px; font-weight: 500; color: var(--text); margin-bottom: 0.6rem; line-height: 1.3; }
+  .subtitle { font-size: 15px; color: var(--text2); line-height: 1.6; margin-bottom: 2rem; }
+  .logo-wrap { display: flex; justify-content: center; margin-bottom: 2rem; }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 1.75rem; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; }
+  .step-label { font-size: 12px; color: var(--text3); margin-bottom: 1.5rem; }
+  .q-category { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 0.4rem; }
+  .q-text { font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 1.5rem; line-height: 1.4; }
+  .multi-hint { font-size: 12px; color: var(--text3); margin-bottom: 0.75rem; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--bg);
+    user-select: none;
+  }
+  .opt:hover { border-color: var(--border2); background: var(--bg2); }
+  .opt.selected { border-color: var(--accent); background: var(--accent-light); }
+  .opt-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .opt.selected .opt-dot { background: var(--accent); border-color: var(--accent); }
+  .opt.selected .opt-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+  .opt-text { font-size: 15px; color: var(--text); }
+  .checkbox-dot {
+    width: 16px; height: 16px; border-radius: 3px;
+    border: 1.5px solid var(--border2);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 10px; color: #fff;
+  }
+  .opt.selected .checkbox-dot { background: var(--accent); border-color: var(--accent); }
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; }
+  .btn {
+    padding: 10px 24px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    border: 0.5px solid var(--border2);
+    background: var(--bg); color: var(--text);
+    transition: background 0.15s, opacity 0.15s;
+    font-family: inherit; text-decoration: none; display: inline-block;
+  }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: transparent; }
+  .btn-primary:hover { opacity: 0.88; background: var(--accent); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .score-ring { display: flex; justify-content: center; margin: 1.5rem 0; }
+  .ring-wrap { position: relative; width: 140px; height: 140px; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-score { font-size: 36px; font-weight: 500; color: var(--text); line-height: 1; }
+  .ring-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .tier-badge { display: inline-block; font-size: 12px; font-weight: 500; padding: 4px 14px; border-radius: 20px; background: var(--accent-light); color: var(--accent); border: 0.5px solid var(--accent); }
+  .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 0.75rem; }
+  .insight-card { border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin: 1.5rem 0; background: var(--bg2); }
+  .insight-card p { font-size: 15px; color: var(--text); line-height: 1.6; }
+  .breakdown { display: flex; flex-direction: column; gap: 10px; margin: 1.5rem 0; }
+  .bk-row { display: flex; align-items: center; gap: 12px; }
+  .bk-label { font-size: 13px; color: var(--text2); width: 110px; flex-shrink: 0; }
+  .bk-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; }
+  .bk-bar { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.6s ease; }
+  .bk-pct { font-size: 12px; color: var(--text3); width: 36px; text-align: right; }
+  .recs { margin: 1.5rem 0 0; }
+  .rec-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .rec-item:last-child { border-bottom: none; }
+  .rec-num { font-size: 12px; font-weight: 500; color: var(--accent); width: 20px; flex-shrink: 0; padding-top: 2px; }
+  .rec-text { font-size: 14px; color: var(--text); line-height: 1.5; }
+  .pr-nudge { margin-top: 1.5rem; padding: 1rem 1.25rem; border-left: 2px solid var(--accent); }
+  .pr-nudge p { font-size: 14px; color: var(--text2); line-height: 1.6; font-style: italic; }
+  .demo-divider { border: none; border-top: 0.5px solid var(--border); margin: 3rem 0 2.5rem; }
+  .demo-notice { text-align: center; margin-bottom: 2.5rem; }
+  .demo-notice span { font-size: 13px; color: var(--text3); background: var(--bg2); padding: 5px 14px; border-radius: 20px; border: 0.5px solid var(--border); }
+  .email-block { border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+  .email-block-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 0.4rem; }
+  .email-block-sub { font-size: 14px; color: var(--text2); line-height: 1.5; margin-bottom: 1.25rem; }
+  .email-row { display: flex; gap: 8px; }
+  .email-row input { flex: 1; padding: 10px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); font-size: 14px; background: var(--bg); color: var(--text); outline: none; font-family: inherit; }
+  .email-row input:focus { border-color: var(--accent); }
+  .email-row input::placeholder { color: var(--text3); }
+  .feature-note { font-size: 12px; color: var(--text3); margin-top: 1rem; font-style: italic; }
+  .email-sent { font-size: 14px; color: var(--text2); padding: 10px 0; }
+  .jt-cta { border: 0.5px solid var(--accent); border-radius: var(--radius); padding: 1.5rem; background: var(--accent-light); display: flex; flex-direction: column; gap: 12px; }
+  .jt-cta-top { display: flex; align-items: center; gap: 12px; }
+  .jt-monogram { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: #fff; flex-shrink: 0; }
+  .jt-cta-name { font-size: 14px; font-weight: 500; color: var(--accent); line-height: 1.2; }
+  .jt-cta-role { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .jt-cta-text { font-size: 14px; color: var(--text2); line-height: 1.6; }
+  .jt-cta-link { display: inline-block; padding: 10px 20px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; text-decoration: none; cursor: pointer; transition: opacity 0.15s; align-self: flex-start; font-family: inherit; }
+  .jt-cta-link:hover { opacity: 0.88; }
+  .page-footer { width: 100%; max-width: 580px; text-align: center; padding: 1.5rem 0 0; font-size: 12px; color: var(--text3); }
+  .page-footer a { color: var(--text3); text-decoration: none; }
+  .page-footer a:hover { color: var(--accent); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wordmark">
+    <div class="wordmark-name"><span class="wordmark-dot"></span>Jane Tabachnick</div>
+    <div class="wordmark-co">& Co.</div>
+  </div>
+  <div class="nav-tagline">Media Readiness Assessment</div>
+</nav>
+
+<div class="card">
+
+  <div id="screen-intro">
+    <div class="logo-wrap">
+      <svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="48" cy="48" r="44" fill="#EEEDFE"/>
+        <path d="M28 39 L28 57 L40 57 L61 68 L61 28 L40 39 Z" fill="#3D3580"/>
+        <line x1="67" y1="34" x2="77" y2="28" stroke="#3D3580" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="69" y1="48" x2="81" y2="48" stroke="#3D3580" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="67" y1="62" x2="77" y2="68" stroke="#3D3580" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="73" y1="41" x2="80" y2="37" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="75" y1="48" x2="84" y2="48" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="73" y1="55" x2="80" y2="59" stroke="#AFA9EC" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="22" y="50" width="7" height="11" rx="2" fill="#AFA9EC"/>
+      </svg>
+    </div>
+    <div class="brand">For authors, experts &amp; thought leaders</div>
+    <h1>Media Readiness Assessment</h1>
+    <p class="subtitle">Answer 5 quick questions. Get your score, a breakdown of where you stand, and clear next steps — in under 2 minutes.</p>
+    <button class="btn btn-primary" onclick="startAssessment()">Start assessment</button>
+  </div>
+
+  <div id="screen-questions" class="hidden">
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="step-label" id="step-label">Question 1 of 5</div>
+    <div class="q-category" id="q-category"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="multi-hint hidden" id="multi-hint">Select all that apply</div>
+    <div class="options" id="options-list"></div>
+    <div class="nav">
+      <button class="btn" id="btn-back" onclick="goBack()">Back</button>
+      <button class="btn btn-primary" id="btn-next" onclick="goNext()" disabled>Next</button>
+    </div>
+  </div>
+
+  <div id="screen-results" class="hidden">
+    <div class="brand">Your results</div>
+    <h1>Media Readiness Assessment</h1>
+    <div class="score-ring">
+      <div class="ring-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="58" fill="none" stroke-width="8" stroke="#e8e8e8"/>
+          <circle cx="70" cy="70" r="58" fill="none" stroke-width="8" stroke-linecap="round" id="ring-arc" stroke="#3D3580" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+        </svg>
+        <div class="ring-num">
+          <span class="ring-score" id="score-num">0</span>
+          <span class="ring-label">out of 100</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-bottom: 1.5rem;">
+      <span class="tier-badge" id="tier-badge"></span>
+    </div>
+    <div class="section-label">Breakdown</div>
+    <div class="breakdown" id="breakdown"></div>
+    <div class="insight-card"><p id="insight-text"></p></div>
+    <div class="section-label">Recommended next steps</div>
+    <div class="recs" id="recs-list"></div>
+    <div class="pr-nudge"><p id="pr-nudge-text"></p></div>
+
+    <hr class="demo-divider">
+
+    <div class="demo-notice">
+      <span>You just experienced a simplified demo.</span>
+    </div>
+
+    <div class="email-block">
+      <div class="email-block-title">Want a copy of your results and recommendations?</div>
+      <div class="email-block-sub">Enter your email and I'll send it to you.</div>
+      <div class="email-row" id="email-row">
+        <input type="email" id="email-input" placeholder="your@email.com"/>
+        <button class="btn btn-primary" onclick="submitEmail()">Send it</button>
+      </div>
+      <div class="email-sent hidden" id="email-sent">Got it — results are on their way.</div>
+      <p class="feature-note">(This is an optional feature typically used in client builds.)</p>
+    </div>
+
+    <div class="jt-cta">
+      <div class="jt-cta-top">
+        <div class="jt-monogram">JT</div>
+        <div>
+          <div class="jt-cta-name">Jane Tabachnick &amp; Co.</div>
+          <div class="jt-cta-role">Custom assessments for PR firms</div>
+        </div>
+      </div>
+      <div class="jt-cta-text">Want a version of this assessment branded for your firm, tailored to your clients, and ready to deploy on your website? I build a small number of these.</div>
+      <a href="https://www.janetabachnick.com/contact" target="_blank" class="jt-cta-link">Get in touch</a>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  Built by <a href="https://www.janetabachnick.com/contact" target="_blank">Jane Tabachnick &amp; Co.</a>
+</footer>
+
+<script>
+const questions = [
+  { category: "Positioning clarity", text: "How clearly defined is your niche and expertise?", multi: false,
+    options: [{ text: "Very clear and specific", points: 20 }, { text: "Somewhat defined", points: 12 }, { text: "Broad / general", points: 5 }, { text: "Not sure yet", points: 0 }] },
+  { category: "Proof & credibility", text: "Which of the following do you currently have?", multi: true,
+    options: [{ text: "Media features or press mentions", points: 5 }, { text: "Client results or case studies", points: 5 }, { text: "Speaking engagements", points: 5 }, { text: "A published book", points: 5 }, { text: "None of the above", points: 0, exclusive: true }] },
+  { category: "Visibility", text: "How consistently are you putting your ideas out publicly?", multi: false,
+    options: [{ text: "Weekly (or more)", points: 20 }, { text: "Occasionally", points: 12 }, { text: "Rarely", points: 5 }, { text: "Not at all", points: 0 }] },
+  { category: "Media assets", text: "Do you have materials ready for PR opportunities?", multi: false,
+    options: [{ text: "Full media kit + clear pitch angles", points: 20 }, { text: "Some materials, but not complete", points: 12 }, { text: "Very basic", points: 5 }, { text: "Nothing prepared", points: 0 }] },
+  { category: "Story angle", text: "How strong and timely is your story or message for media?", multi: false,
+    options: [{ text: "Clear, compelling, and timely", points: 20 }, { text: "Somewhat defined", points: 12 }, { text: "Generic / unclear", points: 5 }, { text: "I haven't developed this yet", points: 0 }] }
+];
+
+const resultVariants = [
+  { tier: "Strong foundation", range: [70, 100],
+    insights: ["You're ahead of most. Your positioning is clear and your credibility is building — but the gap between where you are and consistent media traction often comes down to story. Make sure your angle is timely, not just accurate.", "You've done the foundational work. The next move isn't more content — it's tighter positioning and a media kit that gets to the point in 30 seconds. You're close.", "Most people at your level plateau because visibility becomes inconsistent. The infrastructure is there. What's missing is a repeatable system for getting in front of the right rooms."],
+    prNudge: ["You're ready. This is the exact moment to bring in a PR firm and accelerate — the foundation is there, and a good firm will know exactly how to build on it.", "When clients score here, it's usually a sign they've outgrown DIY visibility. A PR firm doesn't build from scratch for you — they amplify what's already working.", "Strong scores like this are actually when PR firms earn the most. There's real momentum to direct. The question is whether you're pointing it at the right rooms."],
+    recs: [["Sharpen your story angle", "Tie your message to 2–3 specific trends or cultural moments. Timely hooks get picked up. Evergreen messages get filed away."], ["Audit your media kit", "If a producer pulled it up in 60 seconds, would they immediately know who you are, what you do, and why it matters now?"], ["Systematize your visibility", "Weekly output — even short-form — signals to media that you're active and have something to say."]] },
+  { tier: "Building momentum", range: [35, 69],
+    insights: ["You're closer than most — but your visibility and story angle aren't landing with enough consistency for sustained media traction. The pieces are there. They just aren't working together yet.", "There's real potential here that isn't showing up on the outside yet. That gap — between what you know and how you're positioned — is exactly what PR strategy is designed to close.", "You've got credibility. What you're missing is a clear through-line that makes a journalist or producer immediately understand why you, why this, and why now."],
+    prNudge: ["Closing these gaps is exactly what a PR firm is built to do. The raw material is here — story, structure, and a pitch strategy is what connects it.", "Most clients at this stage feel like they're doing everything right but not getting traction. That's not a content problem. It's a positioning and placement problem — which is precisely a PR firm's job.", "This is the most common place people engage a PR firm — enough credibility to be pitchable, not quite enough infrastructure to break through alone."],
+    recs: [["Define your media niche", "Being known for one specific thing is more powerful than being good at many. What's the single idea you want to own?"], ["Develop 2–3 media angles", "Each angle should connect your expertise to something happening in the world right now — not just what you offer."], ["Start building your media kit", "You don't need it to be perfect. A one-page bio, a headshot, and your top 3 talking points is enough to start."]] },
+  { tier: "Early stage", range: [0, 34],
+    insights: ["You're earlier in the process than you might realize — and that's not a problem. Most people who end up as recognizable voices started with exactly what you have now: expertise and ambition. The work is in the packaging.", "Right now, the infrastructure for media readiness isn't in place yet — and pitching without it is why most people get ignored. The good news: it's buildable, and it doesn't take as long as you think.", "You have something to say. What's missing is the structure that makes other people want to amplify it. Clarity of positioning is the first domino — once that's defined, everything else follows faster."],
+    prNudge: ["The good news — this is precisely where a PR firm starts. Building the foundation alongside a client is often where the most transformative work happens.", "Early-stage isn't a red flag — it's a starting point. A PR firm's job is to take what exists and build it into something media-ready. That process starts here.", "Scores like this are actually a great entry point for a PR relationship. There's no bad habits to undo — just a blank canvas and real expertise to build on."],
+    recs: [["Start with positioning", "Before pitching, press, or visibility — get clear on your specific niche and who you're talking to. Vague positioning is the #1 reason experts get passed over."], ["Build credibility assets", "Case studies, client results, and a single speaking engagement create proof that media looks for. Start collecting these deliberately."], ["Create a basic media presence", "A consistent public voice — even once a week — establishes you as active and commentable. Journalists Google you before they reply."]] }
+];
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+let multiSelections = new Array(questions.length).fill(null).map(() => []);
+
+function startAssessment() {
+  document.getElementById('screen-intro').classList.add('hidden');
+  document.getElementById('screen-questions').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById('progress').style.width = ((current / questions.length) * 100) + '%';
+  document.getElementById('step-label').textContent = 'Question ' + (current + 1) + ' of ' + questions.length;
+  document.getElementById('q-category').textContent = q.category;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('multi-hint').classList.toggle('hidden', !q.multi);
+  const list = document.getElementById('options-list');
+  list.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'opt';
+    const isSelected = q.multi ? multiSelections[current].includes(i) : answers[current] === i;
+    if (isSelected) div.classList.add('selected');
+    const dotClass = q.multi ? 'checkbox-dot' : 'opt-dot';
+    const checkmark = (q.multi && isSelected) ? '✓' : '';
+    div.innerHTML = '<div class="' + dotClass + '">' + checkmark + '</div><span class="opt-text">' + opt.text + '</span>';
+    div.onclick = () => selectOption(i, q.multi, opt.exclusive);
+    list.appendChild(div);
+  });
+  document.getElementById('btn-back').style.visibility = current === 0 ? 'hidden' : 'visible';
+  updateNextBtn();
+}
+
+function selectOption(i, multi, exclusive) {
+  if (multi) {
+    const sel = multiSelections[current];
+    const q = questions[current];
+    if (exclusive) {
+      multiSelections[current] = sel.includes(i) ? [] : [i];
+    } else {
+      const exclusiveIdx = q.options.findIndex(o => o.exclusive);
+      const filtered = sel.filter(x => x !== exclusiveIdx);
+      multiSelections[current] = filtered.includes(i) ? filtered.filter(x => x !== i) : [...filtered, i];
+    }
+    answers[current] = multiSelections[current].length > 0 ? multiSelections[current] : null;
+  } else {
+    answers[current] = i;
+  }
+  renderQuestion();
+}
+
+function updateNextBtn() {
+  const btn = document.getElementById('btn-next');
+  const q = questions[current];
+  const hasAnswer = q.multi ? multiSelections[current].length > 0 : answers[current] !== null;
+  btn.disabled = !hasAnswer;
+  btn.textContent = current === questions.length - 1 ? 'See my results' : 'Next';
+}
+
+function goNext() {
+  if (current < questions.length - 1) { current++; renderQuestion(); }
+  else showResults();
+}
+
+function goBack() {
+  if (current > 0) { current--; renderQuestion(); }
+}
+
+function calcScore() {
+  let total = 0; let cats = {};
+  questions.forEach((q, qi) => {
+    let pts = 0;
+    if (q.multi) { multiSelections[qi].forEach(i => { pts += q.options[i].points; }); pts = Math.min(pts, 20); }
+    else { if (answers[qi] !== null) pts = q.options[answers[qi]].points; }
+    cats[q.category] = pts; total += pts;
+  });
+  return { total, cats };
+}
+
+function showResults() {
+  document.getElementById('screen-questions').classList.add('hidden');
+  document.getElementById('screen-results').classList.remove('hidden');
+  const { total, cats } = calcScore();
+  animateScore(total);
+  const variant = resultVariants.find(v => total >= v.range[0] && total <= v.range[1]);
+  document.getElementById('tier-badge').textContent = variant.tier;
+  const idx = Math.floor(Math.random() * 3);
+  document.getElementById('insight-text').textContent = variant.insights[idx];
+  document.getElementById('pr-nudge-text').textContent = variant.prNudge[idx];
+  const breakdown = document.getElementById('breakdown');
+  breakdown.innerHTML = '';
+  Object.entries(cats).forEach(([label, pts]) => {
+    const pct = Math.round((pts / 20) * 100);
+    breakdown.innerHTML += '<div class="bk-row"><span class="bk-label">' + label + '</span><div class="bk-bar-wrap"><div class="bk-bar" style="width:' + pct + '%"></div></div><span class="bk-pct">' + pct + '%</span></div>';
+  });
+  const recs = document.getElementById('recs-list');
+  recs.innerHTML = '';
+  variant.recs.forEach((r, i) => {
+    recs.innerHTML += '<div class="rec-item"><span class="rec-num">' + (i+1) + '</span><span class="rec-text"><strong>' + r[0] + '</strong> — ' + r[1] + '</span></div>';
+  });
+}
+
+function animateScore(target) {
+  const circumference = 364.4; let cur = 0;
+  const num = document.getElementById('score-num');
+  const arc = document.getElementById('ring-arc');
+  const step = target / 40;
+  const timer = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    num.textContent = Math.round(cur);
+    arc.style.strokeDashoffset = circumference - (circumference * (cur / 100));
+    if (cur >= target) clearInterval(timer);
+  }, 25);
+}
+
+function submitEmail() {
+  const val = document.getElementById('email-input').value.trim();
+  if (!val || !val.includes('@')) { document.getElementById('email-input').focus(); return; }
+  document.getElementById('email-row').classList.add('hidden');
+  document.getElementById('email-sent').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
